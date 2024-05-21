@@ -35,6 +35,7 @@ export const followUnFollowUser = asyncHandler(async (req, res) => {
       await User.findByIdAndUpdate(currUser._id, {
         $pull: { following: opponentUserId },
       });
+      // TODO: return the id of the user as response
       res.status(200).json({ message: "User unfollowed successfully" });
     } else {
       // follow the opponentUser
@@ -51,7 +52,7 @@ export const followUnFollowUser = asyncHandler(async (req, res) => {
       });
       await notification.save();
 
-      // TODO return id of the user as a response
+      // TODO: return id of the user as a response
       res.status(200).json({ message: "User followed successfully" });
     }
   } catch (error) {
