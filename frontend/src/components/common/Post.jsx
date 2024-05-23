@@ -116,7 +116,7 @@ const Post = ({ post }) => {
                               @{comment.user.username}
                             </span>
                           </div>
-                          <div className="text-sm">{comment.text}</div>
+                          <div className="text-sm truncate">{comment.text}</div>
                         </div>
                       </div>
                     ))}
@@ -126,7 +126,7 @@ const Post = ({ post }) => {
                     onSubmit={handlePostComment}
                   >
                     <textarea
-                      className="textarea w-full p-1 rounded text-md resize-none border focus:outline-none  border-gray-800"
+                      className="textarea w-full p-2 rounded text-md resize-none border focus:outline-none  border-gray-800"
                       placeholder="Add a comment..."
                       value={comment}
                       onChange={(e) => setComment(e.target.value)}
@@ -162,8 +162,8 @@ const Post = ({ post }) => {
                 )}
 
                 <span
-                  className={`text-sm text-slate-500 group-hover:text-pink-500 ${
-                    isLiked ? "text-pink-500" : ""
+                  className={`text-sm group-hover:text-pink-500 ${
+                    isLiked ? "text-pink-500" : "text-slate-500"
                   }`}
                 >
                   {post.likes.length}

@@ -9,7 +9,7 @@ import NotificatonPage from "./pages/notification/NotificationPage";
 import ProfilePage from "./pages/profile/ProfilePage";
 function App() {
   return (
-    <div className="flex mx-auto">
+    <div className="max-w-[1024px] flex mx-auto">
       {/* common components are not gonna wrapped in Routes */}
       <Sidebar />
       <Routes>

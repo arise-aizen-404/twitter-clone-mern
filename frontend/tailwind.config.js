@@ -12,8 +12,8 @@ export default {
     themes: [
       "light",
       {
-        halloween: {
-          ...daisyUIThemes["halloween"],
+        forest: {
+          ...daisyUIThemes["forest"],
           // primary: "rgb(29, 155, 240)",
           // secondary: "rgb(24, 24, 24)",
         },

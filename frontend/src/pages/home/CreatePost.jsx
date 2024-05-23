@@ -33,16 +33,18 @@ const CreatePost = () => {
   };
 
   return (
-    <div className="flex p-4 items-start gap-4 border-b border-gray-700">
+    <div className="flex p-4 pb-0 items-start gap-4 border-b border-gray-700">
       <div className="avatar">
         <div className="w-8 rounded-full">
-          <img src={data.profileImg || "/avatar-placeholder.png"} />
+          <img
+            src={data.profileImg || "../../../public/avatar-placeholder.png"}
+          />
         </div>
       </div>
       <form className="flex flex-col gap-2 w-full" onSubmit={handleSubmit}>
         <textarea
-          className="textarea w-full p-0 text-lg resize-none border-none focus:outline-none  border-gray-800"
-          placeholder="What is happening?!"
+          className="textarea w-full text-lg resize-none border-none focus:outline-none  border-gray-800 p-2"
+          placeholder="Wanna Share Something!?"
           value={text}
           onChange={(e) => setText(e.target.value)}
         />
@@ -62,7 +64,7 @@ const CreatePost = () => {
           </div>
         )}
 
-        <div className="flex justify-between border-t py-2 border-t-gray-700">
+        <div className="flex justify-between border-t px-2 py-3 border-t-gray-700">
           <div className="flex gap-1 items-center">
             <CiImageOn
               className="fill-primary w-6 h-6 cursor-pointer"
