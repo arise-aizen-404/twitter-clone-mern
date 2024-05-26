@@ -6,7 +6,7 @@ import {
   MdDriveFileRenameOutline,
 } from "react-icons/md";
 import { FaUser } from "react-icons/fa";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import toast from "react-hot-toast";
 
 import XSvg from "../../components/svgs/X";
@@ -19,6 +19,8 @@ const SignUpPage = () => {
     password: "",
   });
   const [backendError, setBackendError] = useState("");
+
+  const queryClient = useQueryClient();
 
   const mutation = useMutation({
     mutationFn: async ({ email, username, fullName, password }) => {
@@ -40,6 +42,8 @@ const SignUpPage = () => {
     onSuccess: () => {
       toast.success("Account created successfully");
       setBackendError(""); // Clear any previous errors
+      queryClient.invalidateQueries({ queryKey: ["authenticatedUser"] });
+      mutation.refetch();
     },
     onError: (error) => {
       setBackendError(error.message);
