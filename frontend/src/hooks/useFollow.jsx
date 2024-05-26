@@ -11,13 +11,13 @@ const useFollow = () => {
         });
         const data = await res.json();
         if (!res.ok) throw new Error(data.error || "Something went wrong");
-        return;
+        return data;
       } catch (error) {
         throw new Error(error);
       }
     },
-    onSuccess: () => {
-      toast.success("followed successfully");
+    onSuccess: (data) => {
+      toast.success(data.message);
       Promise.all(
         queryClient.invalidateQueries({ queryKey: ["suggestedUsers"] }),
         queryClient.invalidateQueries({ queryKey: ["authenticatedUser"] })

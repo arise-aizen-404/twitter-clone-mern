@@ -9,6 +9,7 @@ export const getUserProfile = asyncHandler(async (req, res) => {
   try {
     const user = await User.findOne({ username }).select("-password");
     if (!user) return res.status(404).json({ message: "user not found" });
+    console.log(user);
     res.status(200).json(user);
   } catch (error) {
     console.log(`Error in getUserProflie - ${error.message}`);

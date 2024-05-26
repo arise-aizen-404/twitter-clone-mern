@@ -1,20 +1,20 @@
 import { useEffect, useRef, useState } from "react";
 import { Link, useParams } from "react-router-dom";
-
 import Posts from "../../components/common/Posts";
 import ProfileHeaderSkeleton from "../../components/skeletons/ProfileHeaderSkeleton";
 import EditProfileModal from "./EditProfileModal";
-
-import { POSTS } from "../../utils/db/dummy";
-
 import { FaArrowLeft } from "react-icons/fa6";
 import { IoCalendarOutline } from "react-icons/io5";
 import { FaLink } from "react-icons/fa";
 import { MdEdit } from "react-icons/md";
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { formatMemberSinceDate } from "../../utils/date/date";
+import useFollow from "../../hooks/useFollow";
+import toast from "react-hot-toast";
 
 const ProfilePage = () => {
+  const queryClient = useQueryClient();
+
   const { username } = useParams();
   const {
     data: user,
@@ -22,7 +22,7 @@ const ProfilePage = () => {
     refetch,
     isRefetching,
   } = useQuery({
-    queryKey: ["userProfile"],
+    queryKey: ["userProfile", username],
     queryFn: async () => {
       try {
         const res = await fetch(`/api/users/profile/${username}`);
@@ -30,10 +30,12 @@ const ProfilePage = () => {
         if (!res.ok) throw new Error(data.message || "Something went wrong");
         return data;
       } catch (error) {
-        throw new Error(error);
+        throw new Error(error.message);
       }
     },
   });
+
+  const { data: authUser } = useQuery({ queryKey: ["authenticatedUser"] });
 
   const [coverImg, setCoverImg] = useState(null);
   const [profileImg, setProfileImg] = useState(null);
@@ -42,7 +44,41 @@ const ProfilePage = () => {
   const coverImgRef = useRef(null);
   const profileImgRef = useRef(null);
 
-  const isMyProfile = true;
+  const isMyProfile = authUser?._id === user?._id;
+
+  const { mutate: updateProfileMutation, isPending: isUpdatingProfile } =
+    useMutation({
+      mutationFn: async () => {
+        try {
+          const body = {};
+          if (coverImg) body.coverImg = coverImg;
+          if (profileImg) body.profileImg = profileImg;
+
+          const res = await fetch(`/api/users/update`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify(body),
+          });
+
+          const data = await res.json();
+          if (!res.ok) throw new Error(data.message || "Something went wrong");
+          console.log(data);
+          return data;
+        } catch (error) {
+          throw new Error(error);
+        }
+      },
+      onSuccess: () => {
+        toast.success("Profile updated successfully");
+        Promise.all([
+          queryClient.invalidateQueries({ queryKey: ["authenticatedUser"] }),
+          queryClient.invalidateQueries({ queryKey: ["userProfile"] }),
+        ]);
+      },
+      onError: (error) => toast.error(error.message),
+    });
 
   const handleImgChange = (e, state) => {
     const file = e.target.files[0];
@@ -56,6 +92,9 @@ const ProfilePage = () => {
     }
   };
 
+  const { follow, isPending } = useFollow();
+
+  const amIFollowing = authUser?.following.includes(user?._id);
   useEffect(() => {
     refetch();
   }, [username, refetch]);
@@ -78,7 +117,7 @@ const ProfilePage = () => {
                 <div className="flex flex-col">
                   <p className="font-bold text-lg">{user?.fullName}</p>
                   <span className="text-sm text-slate-500">
-                    {POSTS?.length} posts
+                    {user.posts?.length} posts
                   </span>
                 </div>
               </div>
@@ -132,21 +171,23 @@ const ProfilePage = () => {
                 </div>
               </div>
               <div className="flex justify-end px-4 mt-5">
-                {isMyProfile && <EditProfileModal />}
+                {isMyProfile && <EditProfileModal authUser={authUser} />}
                 {!isMyProfile && (
                   <button
                     className="btn btn-outline rounded-full btn-sm"
-                    onClick={() => alert("Followed successfully")}
+                    onClick={() => follow(user?._id)}
                   >
-                    Follow
+                    {isPending && "Loading..."}
+                    {!isPending && amIFollowing && "Unfollow"}
+                    {!isPending && !amIFollowing && "Follow"}
                   </button>
                 )}
                 {(coverImg || profileImg) && (
                   <button
                     className="btn btn-primary rounded-full btn-sm text-white px-4 ml-2"
-                    onClick={() => alert("Profile updated successfully")}
+                    onClick={() => updateProfileMutation()}
                   >
-                    Update
+                    {isUpdatingProfile ? "Updating..." : "update"}
                   </button>
                 )}
               </div>
@@ -157,7 +198,9 @@ const ProfilePage = () => {
                   <span className="text-sm text-slate-500">
                     @{user?.username}
                   </span>
-                  <span className="text-sm my-1">{user?.bio}</span>
+                  {user?.bio && (
+                    <span className="text-sm my-1">{user?.bio}</span>
+                  )}
                 </div>
 
                 <div className="flex gap-2 flex-wrap">
@@ -166,12 +209,12 @@ const ProfilePage = () => {
                       <>
                         <FaLink className="w-3 h-3 text-slate-500" />
                         <a
-                          href="https://youtube.com/@asaprogrammer_"
+                          href={user?.link}
                           target="_blank"
                           rel="noreferrer"
                           className="text-sm text-blue-500 hover:underline"
                         >
-                          youtube.com/@asaprogrammer_
+                          {user?.link}
                         </a>
                       </>
                     </div>
