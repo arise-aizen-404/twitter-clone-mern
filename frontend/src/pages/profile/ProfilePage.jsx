@@ -7,14 +7,12 @@ import { FaArrowLeft } from "react-icons/fa6";
 import { IoCalendarOutline } from "react-icons/io5";
 import { FaLink } from "react-icons/fa";
 import { MdEdit } from "react-icons/md";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { formatMemberSinceDate } from "../../utils/date/date";
 import useFollow from "../../hooks/useFollow";
-import toast from "react-hot-toast";
+import useUpdateMutation from "../../hooks/useUpdateMutation";
 
 const ProfilePage = () => {
-  const queryClient = useQueryClient();
-
   const { username } = useParams();
   const {
     data: user,
@@ -46,39 +44,7 @@ const ProfilePage = () => {
 
   const isMyProfile = authUser?._id === user?._id;
 
-  const { mutate: updateProfileMutation, isPending: isUpdatingProfile } =
-    useMutation({
-      mutationFn: async () => {
-        try {
-          const body = {};
-          if (coverImg) body.coverImg = coverImg;
-          if (profileImg) body.profileImg = profileImg;
-
-          const res = await fetch(`/api/users/update`, {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify(body),
-          });
-
-          const data = await res.json();
-          if (!res.ok) throw new Error(data.message || "Something went wrong");
-          console.log(data);
-          return data;
-        } catch (error) {
-          throw new Error(error);
-        }
-      },
-      onSuccess: () => {
-        toast.success("Profile updated successfully");
-        Promise.all([
-          queryClient.invalidateQueries({ queryKey: ["authenticatedUser"] }),
-          queryClient.invalidateQueries({ queryKey: ["userProfile"] }),
-        ]);
-      },
-      onError: (error) => toast.error(error.message),
-    });
+  const { updateProfileMutation, isUpdatingProfile } = useUpdateMutation();
 
   const handleImgChange = (e, state) => {
     const file = e.target.files[0];
@@ -185,7 +151,11 @@ const ProfilePage = () => {
                 {(coverImg || profileImg) && (
                   <button
                     className="btn btn-primary rounded-full btn-sm text-white px-4 ml-2"
-                    onClick={() => updateProfileMutation()}
+                    onClick={async () => {
+                      await updateProfileMutation({ coverImg, profileImg });
+                      setCoverImg(null);
+                      setProfileImg(null);
+                    }}
                   >
                     {isUpdatingProfile ? "Updating..." : "update"}
                   </button>
