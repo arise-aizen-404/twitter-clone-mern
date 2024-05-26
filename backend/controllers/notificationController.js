@@ -4,11 +4,15 @@ import asyncHandler from "../middlewares/asyncHandler.js";
 const getNotifications = asyncHandler(async (req, res) => {
   try {
     const userId = req.user._id;
-    const notifications = await Notification.find({ to: userId }).populate({
-      path: "from",
-      select: "username profileImg",
-    });
-    await Notification.updateMany({ to: userId }, { read: true });
+    const notifications = await Notification.find({ to: userId })
+      .populate({
+        path: "from",
+        select: "username profileImg",
+      })
+      .sort({ createdAt: -1 });
+
+    await Notification.updateMany({ to: userId, read: false }, { read: true }); // Update only unread notifications
+
     res.status(200).json(notifications);
   } catch (error) {
     console.log(`Error in getNotifications - ${error.message}`);
