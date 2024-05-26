@@ -2,23 +2,58 @@ import { CiImageOn } from "react-icons/ci";
 import { BsEmojiSmileFill } from "react-icons/bs";
 import { useRef, useState } from "react";
 import { IoCloseSharp } from "react-icons/io5";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import toast from "react-hot-toast";
 
 const CreatePost = () => {
   const [text, setText] = useState("");
   const [img, setImg] = useState(null);
+  const [error, setError] = useState(""); // New state for error message
 
   const imgRef = useRef(null);
 
-  const isPending = false;
-  const isError = false;
+  const { data: authUser } = useQuery({ queryKey: ["authenticatedUser"] });
+  const queryClient = useQueryClient();
 
-  const data = {
-    profileImg: "/avatars/boy1.png",
-  };
+  const { mutate: createPostMutation, isPending } = useMutation({
+    mutationFn: async () => {
+      try {
+        const res = await fetch("/api/posts/create", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ text, img }),
+        });
+        const data = await res.json();
+        if (!res.ok) {
+          throw new Error(data.error || "Something went wrong");
+        }
+        return data;
+      } catch (error) {
+        throw new Error(error); // This will be caught by onError
+      }
+    },
+    onSuccess: () => {
+      setImg(null);
+      setText("");
+      setError(""); // Clear any previous error message
+      toast.success("Post created successfully");
+      queryClient.invalidateQueries({ queryKey: ["posts"] });
+    },
+    onError: (err) => {
+      setError(err.message); // Set the error message to state
+      toast.error(err.message); // Show toast with error message
+    },
+  });
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    alert("Post created successfully");
+    if (!text && !img) {
+      setError("Post must have text or image");
+      return;
+    }
+    createPostMutation();
   };
 
   const handleImgChange = (e) => {
@@ -37,7 +72,10 @@ const CreatePost = () => {
       <div className="avatar">
         <div className="w-8 rounded-full">
           <img
-            src={data.profileImg || "../../../public/avatar-placeholder.png"}
+            src={
+              authUser?.profileImg || "../../../public/avatar-placeholder.png"
+            }
+            alt="Avatar"
           />
         </div>
       </div>
@@ -60,10 +98,10 @@ const CreatePost = () => {
             <img
               src={img}
               className="w-full mx-auto h-72 object-contain rounded"
+              alt="Selected"
             />
           </div>
         )}
-
         <div className="flex justify-between border-t px-2 py-3 border-t-gray-700">
           <div className="flex gap-1 items-center">
             <CiImageOn
@@ -77,7 +115,8 @@ const CreatePost = () => {
             {isPending ? "Posting..." : "Post"}
           </button>
         </div>
-        {isError && <div className="text-red-500">Something went wrong</div>}
+        {error && <div className="text-red-500">{error}</div>}{" "}
+        {/* Render the error message */}
       </form>
     </div>
   );
