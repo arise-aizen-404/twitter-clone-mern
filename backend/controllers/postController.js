@@ -59,7 +59,7 @@ const deletePost = asyncHandler(async (req, res) => {
 const commentOnPost = asyncHandler(async (req, res) => {
   try {
     const { text } = req.body;
-    if (!text) return res.status(404).josn({ error: "Text field is required" });
+    if (!text) return res.status(404).json({ error: "Text field is required" });
     // const user = req.user._id;
     const post = await Post.findById(req.params.id);
     if (!post) return res.status(404).json({ error: "Post not found" });
@@ -215,7 +215,7 @@ const getPostsOfFollowing = asyncHandler(async (req, res) => {
 
 const getUserPosts = asyncHandler(async (req, res) => {
   try {
-    const { username } = req.params;
+    const username = req.params.username.toString();
     const user = await User.findOne({ username }).select("-password");
     if (!user) return res.status(404).json({ error: "user not found" });
 

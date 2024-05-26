@@ -11,7 +11,7 @@ const Posts = ({ feedType }) => {
       case "following":
         return "/api/posts/following";
       default:
-        return "/api/posts/all";
+        return `/api/posts/${feedType}`;
     }
   };
 
@@ -26,7 +26,7 @@ const Posts = ({ feedType }) => {
     queryFn: async () => {
       try {
         const res = await fetch(post_end_point);
-        const data = res.json();
+        const data = await res.json();
         if (!res.ok) {
           throw new Error(data.error || "Something went wrong");
         }
