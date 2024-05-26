@@ -1,4 +1,4 @@
-import { FaRegComment } from "react-icons/fa";
+import { FaHeart, FaRegComment } from "react-icons/fa";
 import { BiRepost } from "react-icons/bi";
 import { FaRegHeart } from "react-icons/fa";
 import { FaRegBookmark } from "react-icons/fa6";
@@ -8,15 +8,22 @@ import { Link } from "react-router-dom";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import toast from "react-hot-toast";
 import LoadingSpinner from "./LoadingSpinner";
+import { formatPostDate } from "../../utils/date/date";
 
 const Post = ({ post }) => {
   const [comment, setComment] = useState("");
+
+  const postOwner = post.user;
+
+  const isMyPost = authUser._id === post.user._id;
+
+  const formattedDate = formatPostDate(post.createdAt);
 
   const queryClient = useQueryClient();
 
   const { data: authUser } = useQuery({ queryKey: ["authenticatedUser"] });
 
-  const { mutate: deletePost, isPending: isDeleting } = useMutation({
+  const { mutate: deletePostMutation, isPending: isDeleting } = useMutation({
     mutationFn: async () => {
       try {
         const res = await fetch(`/api/posts/${post._id}`, {
@@ -38,7 +45,7 @@ const Post = ({ post }) => {
   });
   const isLiked = post.likes.includes(authUser._id);
 
-  const { mutate: likePost, isPending: isLiking } = useMutation({
+  const { mutate: likePostMutation, isPending: isLiking } = useMutation({
     mutationFn: async () => {
       try {
         const res = await fetch(`/api/posts/like/${post._id}`, {
@@ -68,25 +75,42 @@ const Post = ({ post }) => {
     onError: (error) => toast.error(error.message),
   });
 
-  const postOwner = post.user;
-
-  const isMyPost = authUser._id === post.user._id;
-
-  const formattedDate = "1h";
-
-  const isCommenting = false;
+  const { mutate: commentPostMutation, isPending: isCommenting } = useMutation({
+    mutationFn: async () => {
+      try {
+        const res = await fetch(`/api/posts/comment/${post._id}`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ text: comment }),
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.message || "Something went wrong");
+        return data;
+      } catch (error) {
+        throw new Error(error);
+      }
+    },
+    onSuccess: () => {
+      toast.success("Comment posted successfully");
+      setComment("");
+      queryClient.invalidateQueries({ queryKey: ["posts"] });
+    },
+    onError: (error) => toast.error(error.message),
+  });
 
   const handleDeletePost = () => {
-    deletePost();
+    deletePostMutation();
   };
 
   const handlePostComment = (e) => {
     e.preventDefault();
+    if (!isCommenting) commentPostMutation();
   };
 
   const handleLikePost = () => {
-    if (isLiking) return;
-    likePost();
+    if (!isLiking) likePostMutation();
   };
 
   return (
@@ -106,11 +130,14 @@ const Post = ({ post }) => {
               {postOwner.fullName}
             </Link>
             <span className="text-gray-700 flex gap-1 text-sm">
-              <Link to={`/profile/${postOwner.username}`}>
+              <Link
+                to={`/profile/${postOwner.username}`}
+                className="text-slate-500"
+              >
                 @{postOwner.username}
               </Link>
-              <span>·</span>
-              <span>{formattedDate}</span>
+              <span className="text-slate-500">·</span>
+              <span className="text-slate-500">{formattedDate}</span>
             </span>
             {isMyPost && (
               <span className="flex justify-end flex-1">
@@ -218,21 +245,20 @@ const Post = ({ post }) => {
                 onClick={handleLikePost}
               >
                 {isLiking && <LoadingSpinner size="sm" />}
-                {!isLiking && (
-                  <FaRegHeart
-                    className={`w-4 h-4 cursor-pointer group-hover:text-pink-500 ${
-                      isLiked ? "text-pink-500" : "text-slate-500"
-                    }`}
-                  />
+                {!isLiking && !isLiked && (
+                  <FaRegHeart className="w-4 h-4 cursor-pointer group-hover:text-pink-500 text-slate-500" />
+                )}
+                {!isLiking && isLiked && (
+                  <FaHeart className="w-4 h-4 cursor-pointer group-hover:text-pink-500 text-pink-500" />
                 )}
 
-                <span
+                <spanisLiked
                   className={`text-sm group-hover:text-pink-500 ${
                     isLiked ? "text-pink-500" : "text-slate-500"
                   }`}
                 >
                   {post.likes.length}
-                </span>
+                </spanisLiked>
               </div>
             </div>
             <div className="flex w-1/3 justify-end gap-2 items-center">
