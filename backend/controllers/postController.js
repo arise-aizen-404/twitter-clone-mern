@@ -88,11 +88,16 @@ const likeUnlikePost = asyncHandler(async (req, res) => {
       await Post.findByIdAndUpdate(postId, { $pull: { likes: userId } });
       await User.findByIdAndUpdate(userId, { $pull: { likedPosts: postId } });
 
-      res.status(201).json({ message: "Post unliked successfully" });
+      const updatedLikes = post.likes.filter(
+        (id) => id.toString() !== userId.toString()
+      );
+
+      return res.status(201).json(updatedLikes);
     } else {
       // Like action
       await Post.findByIdAndUpdate(postId, { $push: { likes: userId } });
       await User.findByIdAndUpdate(userId, { $push: { likedPosts: postId } });
+
       // Creating and saving a notification
       const notification = new notificationModel({
         type: "like",
@@ -100,13 +105,16 @@ const likeUnlikePost = asyncHandler(async (req, res) => {
         to: post.user,
       });
       await notification.save();
-      res.status(201).json({ message: "Post liked successfully" });
+
+      const updatedLikes = [...post.likes, userId]; // Ensure updated likes array
+      return res.status(201).json(updatedLikes);
     }
   } catch (error) {
     console.log(`Error in likeUnlikePost - ${error.message}`);
-    res.status(500).json({ error: error.message });
+    return res.status(500).json({ error: error.message });
   }
 });
+
 
 const deleteComment = asyncHandler(async (req, res) => {
   const { postId, commentId } = req.params;
