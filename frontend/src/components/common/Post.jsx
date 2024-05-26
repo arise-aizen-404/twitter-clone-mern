@@ -11,6 +11,8 @@ import LoadingSpinner from "./LoadingSpinner";
 import { formatPostDate } from "../../utils/date/date";
 
 const Post = ({ post }) => {
+  const { data: authUser } = useQuery({ queryKey: ["authenticatedUser"] });
+
   const [comment, setComment] = useState("");
 
   const postOwner = post.user;
@@ -20,8 +22,6 @@ const Post = ({ post }) => {
   const formattedDate = formatPostDate(post.createdAt);
 
   const queryClient = useQueryClient();
-
-  const { data: authUser } = useQuery({ queryKey: ["authenticatedUser"] });
 
   const { mutate: deletePostMutation, isPending: isDeleting } = useMutation({
     mutationFn: async () => {
