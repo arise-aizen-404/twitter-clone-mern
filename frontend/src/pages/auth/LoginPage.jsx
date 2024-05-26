@@ -34,7 +34,7 @@ const LoginPage = () => {
     },
     onSuccess: () => {
       toast.success("Login Successfull");
-      //refetch the authenticatedUser
+      // refetch the authenticatedUser
       queryClient.invalidateQueries({ queryKey: ["authenticatedUser"] });
     },
     // onError: (error) => toast.error(error.message),
