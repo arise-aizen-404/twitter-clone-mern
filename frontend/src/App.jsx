@@ -20,7 +20,7 @@ function App() {
         if (data.error) return null; // even if we logout then there is an empty object in authenticatedUser so it will be true and in routes it will show homePage because authenticatedUser ? <Navigate to="/" /> : <LoginPage /> this will become true even if we use navigate("/")
         if (!response.ok)
           throw new Error(data.message || "Something went wrong");
-        console.log("Auth user: ", data);
+        // console.log("Auth user: ", data);
         return data;
       } catch (error) {
         throw new Error(error);

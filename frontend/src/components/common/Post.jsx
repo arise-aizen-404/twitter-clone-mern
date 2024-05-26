@@ -252,13 +252,13 @@ const Post = ({ post }) => {
                   <FaHeart className="w-4 h-4 cursor-pointer group-hover:text-pink-500 text-pink-500" />
                 )}
 
-                <spanisLiked
+                <span
                   className={`text-sm group-hover:text-pink-500 ${
                     isLiked ? "text-pink-500" : "text-slate-500"
                   }`}
                 >
                   {post.likes.length}
-                </spanisLiked>
+                </span>
               </div>
             </div>
             <div className="flex w-1/3 justify-end gap-2 items-center">

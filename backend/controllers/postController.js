@@ -115,7 +115,6 @@ const likeUnlikePost = asyncHandler(async (req, res) => {
   }
 });
 
-
 const deleteComment = asyncHandler(async (req, res) => {
   const { postId, commentId } = req.params;
   const userId = req.user._id;
@@ -175,7 +174,8 @@ const getAllLikedPosts = asyncHandler(async (req, res) => {
       _id: { $in: user.likedPosts },
     })
       .populate({ path: "user", select: "-password" })
-      .populate({ path: "comments.user", select: "-password" });
+      .populate({ path: "comments.user", select: "-password" })
+      .sort({ updatedAt: -1 });
     res.status(201).json(likedPosts);
   } catch (error) {
     console.log(`Error in getAllLikedPosts - ${error.message}`);
