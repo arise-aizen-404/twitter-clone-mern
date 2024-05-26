@@ -12,20 +12,20 @@ export const createUser = asyncHandler(async (req, res) => {
   // const complexEmailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   if (!emailRegex.test(email))
-    return res.status(400).json({ message: "Invalid email format" });
+    return res.status(401).json({ message: "Invalid email format" });
 
   const usernameExists = await User.findOne({ username });
   if (usernameExists) {
-    return res.status(400).json({ message: "Username already exists" });
+    return res.status(401).json({ message: "Username already exists" });
   }
 
   const emailExists = await User.findOne({ email });
   if (emailExists) {
-    return res.status(400).json({ message: "Email already exists" });
+    return res.status(401).json({ message: "Email already exists" });
   }
 
   if (password.length < 6)
-    return res.status(400).json({ message: "Password atleast be 6 letters" });
+    return res.status(401).json({ message: "Password atleast be 6 letters" });
 
   const salt = await bcrypt.genSalt(10);
   const hashedPassword = await bcrypt.hash(password, salt);
@@ -47,7 +47,7 @@ export const createUser = asyncHandler(async (req, res) => {
     });
   } catch (error) {
     console.log(`Error in createUser - ${error.message}`);
-    res.status(400).json({ message: "Invalid user data" });
+    res.status(401).json({ message: "Invalid user data" });
   }
 });
 
@@ -60,6 +60,8 @@ export const loginUser = asyncHandler(async (req, res) => {
       user?.password || ""
     );
 
+    if (!user && !isPasswordMatched)
+      return res.status(400).json({ message: "Please provide credentials" });
     if (!user || !isPasswordMatched)
       return res.status(400).json({ message: "Invalid username or password" });
 
@@ -101,6 +103,6 @@ export const getCurrentUser = asyncHandler(async (req, res) => {
     if (user) res.send(user);
   } catch (error) {
     console.log(`Error in getCurrentUser - ${error.message}`);
-    return res.status(404).json({ message: "User not found" });
+    return res.status(404).json({ error: "User not found" });
   }
 });

@@ -1,12 +1,15 @@
 import { Link } from "react-router-dom";
 import { useState } from "react";
+import {
+  MdOutlineMail,
+  MdPassword,
+  MdDriveFileRenameOutline,
+} from "react-icons/md";
+import { FaUser } from "react-icons/fa";
+import { useMutation } from "@tanstack/react-query";
+import toast from "react-hot-toast";
 
 import XSvg from "../../components/svgs/X";
-
-import { MdOutlineMail } from "react-icons/md";
-import { FaUser } from "react-icons/fa";
-import { MdPassword } from "react-icons/md";
-import { MdDriveFileRenameOutline } from "react-icons/md";
 
 const SignUpPage = () => {
   const [formData, setFormData] = useState({
@@ -15,26 +18,60 @@ const SignUpPage = () => {
     fullName: "",
     password: "",
   });
+  const [backendError, setBackendError] = useState("");
+
+  const mutation = useMutation({
+    mutationFn: async ({ email, username, fullName, password }) => {
+      const res = await fetch("/api/auth/", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ email, username, fullName, password }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.message || "Something went wrong");
+      }
+      console.log(data);
+      console.log(mutation.error);
+      return data;
+    },
+    onSuccess: () => {
+      toast.success("Account created successfully");
+      setBackendError(""); // Clear any previous errors
+    },
+    onError: (error) => {
+      setBackendError(error.message);
+      // toast.error(error.message);
+    },
+  });
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    console.log(formData);
+    mutation.mutate(formData);
+    if (!mutation.isPending) {
+      setFormData({
+        email: "",
+        username: "",
+        fullName: "",
+        password: "",
+      });
+    }
   };
 
   const handleInputChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  const isError = false;
-
   return (
     <div className="max-w-screen-xl mx-auto flex h-screen">
-      <div className="flex-1 hidden lg:flex items-center  justify-center">
-        <XSvg className=" lg:w-2/3 fill-white" />
+      <div className="flex-1 hidden lg:flex items-center justify-center">
+        <XSvg className="lg:w-2/3 fill-white" />
       </div>
       <div className="flex-1 flex flex-col justify-center items-center">
         <form
-          className="lg:w-2/3  mx-auto md:mx-20 flex gap-4 flex-col"
+          className="lg:w-2/3 mx-auto md:mx-20 flex gap-4 flex-col"
           onSubmit={handleSubmit}
         >
           <XSvg className="w-24 lg:hidden fill-white" />
@@ -56,14 +93,13 @@ const SignUpPage = () => {
               <FaUser />
               <input
                 type="text"
-                className="grow "
+                className="grow"
                 placeholder="Username"
                 name="username"
                 onChange={handleInputChange}
                 value={formData.username}
               />
             </label>
-
             <label className="input input-bordered rounded flex items-center gap-2 flex-1">
               <MdDriveFileRenameOutline />
               <input
@@ -89,10 +125,10 @@ const SignUpPage = () => {
             />
           </label>
           <button className="btn rounded-full btn-primary text-white">
-            Sign up
+            {mutation.isPending ? "Signing up..." : "Sign up"}
           </button>
-          {isError && <p className="text-red-500">Something went wrong</p>}
         </form>
+        {backendError && <p className="text-red-500 mt-4">{backendError}</p>}
         <div className="flex flex-col lg:w-2/3 gap-2 mt-4">
           <p className="text-white text-md">Already have an account?</p>
           <Link to="/login">
@@ -105,4 +141,5 @@ const SignUpPage = () => {
     </div>
   );
 };
+
 export default SignUpPage;

@@ -19,7 +19,7 @@ cloudinary.config({
 
 // Create Express app
 const app = express();
-const port = process.env.PORT || 5005;
+const port = process.env.PORT || 5000;
 
 // Middleware
 app.use(express.json());
